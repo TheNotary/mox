@@ -159,9 +159,6 @@ spec:
               containerPort: {{ .Values.listeners.imap.port }}
               protocol: TCP
             {{- end }}
-            - name: http
-              containerPort: 80
-              protocol: TCP
             - name: https
               containerPort: 443
               protocol: TCP
@@ -176,6 +173,7 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
+              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
@@ -188,6 +186,7 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
+              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
@@ -199,6 +198,7 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
+              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
