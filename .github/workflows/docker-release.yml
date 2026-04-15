@@ -1,0 +1,89 @@
+name: Docker + Helm Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ci
+          platforms: linux/amd64,linux/arm64,linux/arm,linux/386,linux/ppc64le,linux/s390x
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  helm-chart:
+    needs: docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - name: Login to Helm OCI registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Strip 'v' prefix for Helm semver (v0.0.16 -> 0.0.16)
+          CHART_VERSION="${TAG#v}"
+          echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+          echo "app_version=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Update Chart.yaml version
+        working-directory: helm_chart/mox
+        run: |
+          sed -i "s/^version: .*/version: ${{ steps.version.outputs.chart_version }}/" Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"${{ steps.version.outputs.app_version }}\"/" Chart.yaml
+          cat Chart.yaml
+
+      - name: Package and push Helm chart
+        working-directory: helm_chart/mox
+        run: |
+          helm package .
+          helm push mox-${{ steps.version.outputs.chart_version }}.tgz oci://${{ env.REGISTRY }}/thenotary/charts

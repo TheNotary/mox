@@ -5,8 +5,8 @@ fullnameOverride: ""
 
 # -- Mox container image settings
 image:
-  repository: r.xmox.nl/mox
-  # -- Pin to a specific version; see https://r.xmox.nl/r/mox/
+  repository: ghcr.io/thenotary/mox
+  # -- Pin to a specific version; see https://github.com/thenotary/mox/pkgs/container/mox
   tag: "latest"
   pullPolicy: IfNotPresent
 
