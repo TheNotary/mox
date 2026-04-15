@@ -382,7 +382,7 @@ terminationGracePeriodSeconds: 15
 
 # -- Health probes for the mox container.
 # Decoupled from listener configuration so probes are always active.
-# Default target is port 443 (HTTPS webmail/admin listener, always available).
+# Default target is port 80 (webmail/admin listener, always available).
 probes:
   # -- Enable startup, readiness, and liveness probes
   enabled: true
@@ -390,14 +390,12 @@ probes:
   # include the /healthz endpoint for a more meaningful health signal (returns
   # 503 during graceful shutdown).
   type: httpGet
-  # -- TCP port to probe. Use any always-enabled port: 443 (HTTPS),
+  # -- TCP port to probe. Use any always-enabled port: 80 (HTTP), 443 (HTTPS),
   # or the metrics port (8010) if listeners.metrics.enabled is true.
-  port: 443
+  port: 80
   # -- httpGet probe settings (used when type is httpGet)
   httpGet:
     path: /healthz
-    # -- HTTP scheme for the probe request (HTTP or HTTPS)
-    scheme: HTTPS
   startup:
     initialDelaySeconds: 5
     periodSeconds: 5

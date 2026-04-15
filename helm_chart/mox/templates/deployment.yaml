@@ -173,7 +173,6 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
-              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
@@ -186,7 +185,6 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
-              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
@@ -198,7 +196,6 @@ spec:
             httpGet:
               path: {{ .Values.probes.httpGet.path }}
               port: {{ .Values.probes.port }}
-              scheme: {{ .Values.probes.httpGet.scheme | default "HTTP" }}
             {{- else }}
             tcpSocket:
               port: {{ .Values.probes.port }}
