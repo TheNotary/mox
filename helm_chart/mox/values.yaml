@@ -369,6 +369,46 @@ persistence:
   # -- Use an existing PVC instead of creating one
   existingClaim: ""
 
+# -- Seconds to wait in the preStop hook before mox receives SIGTERM.
+# This allows kube-proxy to update iptables/endpoints so in-flight connections
+# are not routed to a terminating pod. Mox's own graceful shutdown (~4s) runs
+# after this sleep finishes.
+preStopSleepSeconds: 5
+
+# -- Total time Kubernetes waits for the pod to terminate after sending SIGTERM.
+# Must be > preStopSleepSeconds + mox graceful shutdown time (~4s).
+# Formula: preStopSleepSeconds (5) + mox shutdown (4) + safety margin (6) = 15
+terminationGracePeriodSeconds: 15
+
+# -- Health probes for the mox container.
+# Decoupled from listener configuration so probes are always active.
+# Default target is port 80 (webmail/admin listener, always available).
+probes:
+  # -- Enable startup, readiness, and liveness probes
+  enabled: true
+  # -- Probe type: tcpSocket or httpGet. Use httpGet with mox versions that
+  # include the /healthz endpoint for a more meaningful health signal (returns
+  # 503 during graceful shutdown).
+  type: httpGet
+  # -- TCP port to probe. Use any always-enabled port: 80 (HTTP), 443 (HTTPS),
+  # or the metrics port (8010) if listeners.metrics.enabled is true.
+  port: 80
+  # -- httpGet probe settings (used when type is httpGet)
+  httpGet:
+    path: /healthz
+  startup:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    # -- Allow up to ~155s for startup (5 + 30*5). Covers init containers +
+    # mox boot + BoltDB open on large data sets.
+    failureThreshold: 30
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+
 # -- Pod resource requests and limits
 resources:
   requests:
@@ -399,6 +439,10 @@ metrics:
 networkPolicy:
   enabled: false
 
-# -- PodDisruptionBudget
+# -- PodDisruptionBudget protects the mox pod from involuntary evictions
+# (e.g. node drains). With minAvailable: 1, Kubernetes will not voluntarily
+# evict the pod unless a replacement can be scheduled first.
 podDisruptionBudget:
-  enabled: false
+  enabled: true
+  # -- Minimum number of pods that must remain available during disruptions.
+  minAvailable: 1

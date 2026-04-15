@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "mox.labels" . | nindent 4 }}
 spec:
-  minAvailable: 0
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
   selector:
     matchLabels:
       {{- include "mox.selectorLabels" . | nindent 6 }}

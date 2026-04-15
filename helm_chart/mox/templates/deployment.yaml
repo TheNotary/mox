@@ -19,6 +19,7 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       securityContext:
         fsGroup: 1000
       {{- if .Values.dnssecResolverSidecar.enabled }}
@@ -71,9 +72,16 @@ spec:
           args:
             - |
               PIP_NAME="{{ $ipCfg.publicIp.name }}"
-              echo "Waiting for ASO PublicIPAddress ${PIP_NAME} to be ready..."
-              kubectl wait "publicipaddress/${PIP_NAME}" --for=condition=Ready --timeout=300s
-              IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}')
+              # Fast path: if the PublicIPAddress already has an IP assigned (upgrade scenario),
+              # skip the 300s kubectl wait entirely.
+              IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}' 2>/dev/null)
+              if [ -n "${IP}" ]; then
+                echo "Fast path: ASO PublicIPAddress ${PIP_NAME} already has IP ${IP}"
+              else
+                echo "Waiting for ASO PublicIPAddress ${PIP_NAME} to be ready..."
+                kubectl wait "publicipaddress/${PIP_NAME}" --for=condition=Ready --timeout=300s
+                IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}')
+              fi
               echo "Discovered public IP: ${IP}"
               echo -n "${IP}" > /mox-init/public-ip
           volumeMounts:
@@ -162,18 +170,46 @@ spec:
               containerPort: {{ .Values.listeners.metrics.port }}
               protocol: TCP
             {{- end }}
-          {{- if .Values.listeners.smtp.enabled }}
-          livenessProbe:
+          {{- if .Values.probes.enabled }}
+          startupProbe:
+            {{- if eq .Values.probes.type "httpGet" }}
+            httpGet:
+              path: {{ .Values.probes.httpGet.path }}
+              port: {{ .Values.probes.port }}
+            {{- else }}
             tcpSocket:
-              port: smtp
-            initialDelaySeconds: 10
-            periodSeconds: 30
+              port: {{ .Values.probes.port }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
           readinessProbe:
+            {{- if eq .Values.probes.type "httpGet" }}
+            httpGet:
+              path: {{ .Values.probes.httpGet.path }}
+              port: {{ .Values.probes.port }}
+            {{- else }}
             tcpSocket:
-              port: smtp
-            initialDelaySeconds: 5
-            periodSeconds: 10
+              port: {{ .Values.probes.port }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          livenessProbe:
+            {{- if eq .Values.probes.type "httpGet" }}
+            httpGet:
+              path: {{ .Values.probes.httpGet.path }}
+              port: {{ .Values.probes.port }}
+            {{- else }}
+            tcpSocket:
+              port: {{ .Values.probes.port }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
           {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep {{ .Values.preStopSleepSeconds }}"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
