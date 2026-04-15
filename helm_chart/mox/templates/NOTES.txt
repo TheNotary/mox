@@ -1,16 +1,16 @@
 Mox mail server has been deployed.
-{{- if and .Values.outboundPublicIpManagement.enabled .Values.outboundService.type }}
+{{- if and .Values.outboundPublicIpManagement.enabled .Values.service.type }}
 
-=== WARNING: outboundService IGNORED ===
+=== WARNING: service section IGNORED ===
 
-outboundService is configured but will be ignored because outboundPublicIpManagement
+The service section is configured but will be ignored because outboundPublicIpManagement
 is enabled. The chart hardcodes type: LoadBalancer and externalTrafficPolicy: Local
-when managed IPs are active. You can safely remove the outboundService section from
+when managed IPs are active. You can safely remove the service section from
 your values.
 {{- end }}
 
 Get the application URL by running:
-{{- if or .Values.outboundPublicIpManagement.enabled (eq .Values.outboundService.type "LoadBalancer") }}
+{{- if or .Values.outboundPublicIpManagement.enabled (eq .Values.service.type "LoadBalancer") }}
   NOTE: It may take a few minutes for the LoadBalancer IP to be available.
   You can watch the status with:
     kubectl get svc --namespace {{ .Release.Namespace }} -w {{ include "mox.fullname" . }}

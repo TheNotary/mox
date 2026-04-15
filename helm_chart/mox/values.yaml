@@ -189,14 +189,21 @@ listeners:
     enabled: true
     port: 8010
 
-# -- Kubernetes Service configuration for outbound traffic routing.
+# -- Kubernetes Service configuration for the mail server.
 # Ignored when outboundPublicIpManagement is enabled (the chart hardcodes LoadBalancer +
 # externalTrafficPolicy: Local and derives annotations from the provider config).
 # Required when outboundPublicIpManagement is disabled.
-outboundService:
+service:
   type: LoadBalancer
-  # -- CRITICAL for mox: preserves real client source IPs for spam filtering.
-  # Only change this if you understand the implications for mail security.
+  # -- Controls how traffic is routed to the mox pod.
+  #   Local  — Preserves the real client source IP. Required for mox's spam filtering,
+  #            SPF validation, and IP-based rate limiting. Traffic is only routed to
+  #            nodes that run the pod (no cross-node hops), which may cause uneven
+  #            load distribution in multi-node clusters.
+  #   Cluster — Kubernetes may SNAT (masquerade) traffic, replacing the client IP with
+  #             an internal node IP. Mox will see all connections as originating from
+  #             cluster nodes, which breaks IP reputation, SPF checks, and junk
+  #             filtering. Allows even load distribution across nodes.
   externalTrafficPolicy: Local
   # -- Pre-provisioned LoadBalancer IP. Leave empty to let the cloud provider assign one.
   loadBalancerIP: ""
@@ -321,7 +328,7 @@ providers:
 # LoadBalancer. When enabled with azureAso, creates an ASO PublicIPAddress CRD,
 # discovers the assigned IP at startup, and patches reverse DNS (PTR) after
 # forward DNS propagates. Also drives the Service annotations for Azure PIP binding.
-# When enabled, outboundService is ignored and staticPublicIPs.ipv4 is optional.
+# When enabled, the service section is ignored and staticPublicIPs.ipv4 is optional.
 outboundPublicIpManagement:
   enabled: false
   # -- Name of the provider from the providers map (must have platform: azureAso)

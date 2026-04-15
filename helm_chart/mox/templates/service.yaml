@@ -1,6 +1,6 @@
 {{- if not .Values.outboundPublicIpManagement.enabled }}
-  {{- if not .Values.outboundService.type }}
-    {{- fail "Either enable outboundPublicIpManagement or configure outboundService to define how outbound traffic is routed." }}
+  {{- if not .Values.service.type }}
+    {{- fail "Either enable outboundPublicIpManagement or configure service to define how traffic is routed." }}
   {{- end }}
   {{- if not .Values.staticPublicIPs.ipv4 }}
     {{- fail "staticPublicIPs.ipv4 is required when outboundPublicIpManagement is not enabled. Set the public IPv4 address of your LoadBalancer." }}
@@ -24,7 +24,7 @@ metadata:
     {{- if .Values.staticPublicIPs.ipv4 }}
     service.beta.kubernetes.io/azure-load-balancer-ipv4: {{ .Values.staticPublicIPs.ipv4 | quote }}
     {{- end }}
-    {{- with .Values.outboundService.annotations }}
+    {{- with .Values.service.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
     {{- end }}
@@ -33,12 +33,12 @@ spec:
   type: LoadBalancer
   externalTrafficPolicy: Local
   {{- else }}
-  type: {{ .Values.outboundService.type }}
-  {{- if .Values.outboundService.externalTrafficPolicy }}
-  externalTrafficPolicy: {{ .Values.outboundService.externalTrafficPolicy }}
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
   {{- end }}
-  {{- if .Values.outboundService.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.outboundService.loadBalancerIP }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
   {{- end }}
   {{- end }}
   selector:
