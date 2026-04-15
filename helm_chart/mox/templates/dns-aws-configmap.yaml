@@ -68,7 +68,16 @@ data:
             "ResourceRecords": [{"Value": "\"v=TLSRPTv1; rua=mailto:{{ .Values.hostTlsrpt.localpart }}@{{ .Values.hostname }}\""}]
           }
         }
-    {{- end }}
+    {{- end }},
+        {
+          "Action": "UPSERT",
+          "ResourceRecordSet": {
+            "Name": "${HOSTNAME}.",
+            "Type": "TXT",
+            "TTL": 3600,
+            "ResourceRecords": [{"Value": "\"v=spf1 ip4:${MOX_PUBLIC_IP}{{ range .Values.outboundIPs }} ip4:{{ . }}{{ end }} ~all\""}]
+          }
+        }
     {{- range $cfg := .Values.domains }}
     {{- if and $cfg.dns $cfg.dns.enabled }},
         {
@@ -262,12 +271,10 @@ data:
     if [ -z "$DKIM_SECRET" ]; then
       echo "WARNING: Could not read DKIM secret ${DKIM_SECRET_NAME}. Auto-generated DKIM DNS records will be skipped."
     else
-      DKIM_CHANGES=""
-
       read_pubkey() {
         local KEY_NAME="$1"
-        # Extract base64-encoded value from JSON, then decode twice:
-        # K8s secret values are base64-encoded, and the pubkey value itself is base64-encoded
+        # Extract base64-encoded value from JSON, then decode it.
+        # K8s secret values are base64-encoded; decoding gives the pubkey string.
         local B64_VAL
         B64_VAL=$(printf '%s' "$DKIM_SECRET" | sed -n "s/.*\"${KEY_NAME}\": *\"\([^\"]*\)\".*/\1/p")
         if [ -n "$B64_VAL" ]; then
@@ -275,23 +282,44 @@ data:
         fi
       }
 
+      # Build a Route53 TXT record value with proper quoting.
+      # DNS TXT strings are limited to 255 chars each; long values must be
+      # split into multiple quoted strings (e.g. "chunk1" "chunk2").
+      # Output is escaped for embedding in JSON: \"chunk1\" \"chunk2\"
+      txt_quote() {
+        local val="$1" result="" chunk clen
+        while [ ${#val} -gt 0 ]; do
+          chunk=$(printf '%.255s' "$val")
+          clen=${#chunk}
+          result="${result}${result:+ }\\\"${chunk}\\\""
+          if [ $clen -ge ${#val} ]; then
+            val=""
+          else
+            val=$(printf '%s' "$val" | tail -c +$((clen + 1)))
+          fi
+        done
+        printf '%s' "$result"
+      }
+
+      DKIM_JSON="/tmp/dkim_changes.json"
+      printf '{"Changes":[' > "$DKIM_JSON"
+      DKIM_FIRST=true
+
       {{- range $cfg := .Values.domains }}
       {{- if include "mox.domainNeedsDkimGeneration" (dict "domain" $cfg "global" $) }}
       {{- $effSel := include "mox.dkimSelectorsForDomain" (dict "domain" $cfg "global" $) | fromYaml -}}
       {{- range $sel, $selCfg := $effSel }}
-      PUBKEY_{{ $sel | upper }}_{{ $cfg.name | replace "." "_" | replace "-" "_" }}=$(read_pubkey "{{ $sel }}-{{ $cfg.name }}.pubkey")
-      if [ -n "$PUBKEY_{{ $sel | upper }}_{{ $cfg.name | replace "." "_" | replace "-" "_" }}" ]; then
+      DKIM_PUBKEY=$(read_pubkey "{{ $sel }}-{{ $cfg.name }}.pubkey")
+      if [ -n "$DKIM_PUBKEY" ]; then
         echo "  Found public key for {{ $sel }}._domainkey.{{ $cfg.name }}"
-        DKIM_CHANGES="${DKIM_CHANGES}${DKIM_CHANGES:+,}
-        {
-          \"Action\": \"UPSERT\",
-          \"ResourceRecordSet\": {
-            \"Name\": \"{{ $sel }}._domainkey.{{ $cfg.name }}.\",
-            \"Type\": \"TXT\",
-            \"TTL\": 3600,
-            \"ResourceRecords\": [{\"Value\": \"\\\"v=DKIM1; k={{ $selCfg.algorithm }}; p=\${PUBKEY_{{ $sel | upper }}_{{ $cfg.name | replace "." "_" | replace "-" "_" }}}\\\"\"}]
-          }
-        }"
+        DKIM_TXT_QUOTED=$(txt_quote "v=DKIM1; k={{ $selCfg.algorithm }}; p=${DKIM_PUBKEY}")
+        if [ "$DKIM_FIRST" = "true" ]; then
+          DKIM_FIRST=false
+        else
+          printf ',' >> "$DKIM_JSON"
+        fi
+        printf '{"Action":"UPSERT","ResourceRecordSet":{"Name":"{{ $sel }}._domainkey.{{ $cfg.name }}.","Type":"TXT","TTL":3600,"ResourceRecords":[{"Value":"%s"}]}}' \
+          "$DKIM_TXT_QUOTED" >> "$DKIM_JSON"
       else
         echo "  WARNING: No public key found for {{ $sel }}._domainkey.{{ $cfg.name }}"
       fi
@@ -299,17 +327,12 @@ data:
       {{- end }}
       {{- end }}
 
-      if [ -n "$DKIM_CHANGES" ]; then
-        cat > /tmp/dkim_changes.json << DKIMCHANGESET
-    {
-      "Changes": [${DKIM_CHANGES}
-      ]
-    }
-    DKIMCHANGESET
+      printf ']}' >> "$DKIM_JSON"
+      if [ "$DKIM_FIRST" = "false" ]; then
         echo "Submitting auto-generated DKIM DNS records..."
         aws route53 change-resource-record-sets \
           --hosted-zone-id "${ZONE_ID}" \
-          --change-batch file:///tmp/dkim_changes.json
+          --change-batch file://"$DKIM_JSON"
         echo "Auto-generated DKIM DNS records created/updated."
       fi
     fi
