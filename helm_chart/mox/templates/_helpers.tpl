@@ -84,13 +84,13 @@ Returns a YAML list suitable for embedding in mox.conf sconf format.
 {{/*
 Build the list of dnsNames for the cert-manager Certificate.
 Includes hostname + autoconfig/mta-sts subdomains for each domain.
+The bare domain name is intentionally excluded — its A record may point
+elsewhere (e.g. a static website), which would break HTTP-01 validation.
+Users who need the bare domain can add it via additionalDnsNames.
 */}}
 {{- define "mox.certDnsNames" -}}
 - {{ .Values.hostname }}
 {{- range $cfg := .Values.domains }}
-{{- if ne $cfg.name $.Values.hostname }}
-- {{ $cfg.name }}
-{{- end }}
 - autoconfig.{{ $cfg.name }}
 - mta-sts.{{ $cfg.name }}
 {{- end }}
@@ -405,13 +405,15 @@ Returns empty string on success; fails with a descriptive error otherwise.
 {{- end -}}
 
 {{/*
-Check whether the domain matching .Values.hostname has dnssec.enabled: true.
+Check whether the domain covering .Values.hostname has dnssec.enabled: true.
 Used to gate DANE TLSA record creation (DANE is per-hostname, not per-domain).
+Matches when hostname equals the domain name OR is a subdomain of it
+(e.g. hostname "mail.cooperly.net" matches domain "cooperly.net").
 Returns "true" or "" (empty string / falsy).
 */}}
 {{- define "mox.hostnameDomainHasDnssec" -}}
 {{- range $cfg := .Values.domains -}}
-  {{- if eq $cfg.name $.Values.hostname -}}
+  {{- if or (eq $cfg.name $.Values.hostname) (hasSuffix (printf ".%s" $cfg.name) $.Values.hostname) -}}
     {{- if and $cfg.dnssec $cfg.dnssec.enabled -}}
 true
     {{- end -}}
