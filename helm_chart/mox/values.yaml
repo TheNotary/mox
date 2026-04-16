@@ -232,6 +232,14 @@ transport:
     mechanisms:
       - PLAIN
 
+# -- Self-delivery configuration.
+# When enabled, messages sent between accounts on the same domain are delivered
+# via localhost:25 instead of through the external IP. This avoids SPF failures
+# that occur when Kubernetes hairpin NAT changes the source IP of the self-
+# connection. Also adds ip4:127.0.0.1 to the SPF DNS record.
+selfDelivery:
+  enabled: false
+
 # =============================================================================
 # PROVIDERS
 # =============================================================================

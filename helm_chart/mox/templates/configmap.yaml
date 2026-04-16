@@ -112,4 +112,11 @@ data:
     Routes:
     	-
     		Transport: smarthost
+    {{- else if .Values.selfDelivery.enabled }}
+    Transports:
+    	selfdelivery:
+    		SMTP:
+    			Host: localhost
+    			Port: 25
+    			NoSTARTTLS: true
     {{- end }}

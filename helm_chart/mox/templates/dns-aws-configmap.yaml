@@ -75,7 +75,7 @@ data:
             "Name": "${HOSTNAME}.",
             "Type": "TXT",
             "TTL": 3600,
-            "ResourceRecords": [{"Value": "\"v=spf1 ip4:${MOX_PUBLIC_IP}{{ range .Values.outboundIPs }} ip4:{{ . }}{{ end }} ~all\""}]
+            "ResourceRecords": [{"Value": "\"v=spf1 ip4:${MOX_PUBLIC_IP}{{ range .Values.outboundIPs }} ip4:{{ . }}{{ end }}{{ if .Values.selfDelivery.enabled }} ip4:127.0.0.1{{ end }} ~all\""}]
           }
         }
     {{- range $cfg := .Values.domains }}
@@ -95,7 +95,7 @@ data:
             "Name": "{{ $cfg.name }}.",
             "Type": "TXT",
             "TTL": 3600,
-            "ResourceRecords": [{"Value": "\"v=spf1 ip4:${MOX_PUBLIC_IP}{{ range $.Values.outboundIPs }} ip4:{{ . }}{{ end }} ~all\""}]
+            "ResourceRecords": [{"Value": "\"v=spf1 ip4:${MOX_PUBLIC_IP}{{ range $.Values.outboundIPs }} ip4:{{ . }}{{ end }}{{ if $.Values.selfDelivery.enabled }} ip4:127.0.0.1{{ end }} ~all\""}]
           }
         }
     {{- if $cfg.dkim }}
@@ -138,7 +138,7 @@ data:
             "Name": "_mta-sts.{{ $cfg.name }}.",
             "Type": "TXT",
             "TTL": 3600,
-            "ResourceRecords": [{"Value": "\"v=STSv1; id={{ printf "%s-%s-%s" $cfg.name $cfg.mtasts.mode $cfg.mtasts.maxAge | sha256sum | trunc 8 }}\""}]
+            "ResourceRecords": [{"Value": "\"v=STSv1; id={{ printf "%s-%s-%s-%s" $cfg.name $cfg.mtasts.mode $cfg.mtasts.maxAge $.Values.hostname | sha256sum | trunc 8 }}\""}]
           }
         },
         {

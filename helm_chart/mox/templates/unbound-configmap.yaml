@@ -58,6 +58,10 @@ data:
         log-replies: no
         logfile: ""
 
+        # Resolve localhost to loopback (used by selfDelivery transport)
+        local-zone: "localhost." static
+        local-data: "localhost. A 127.0.0.1"
+
     forward-zone:
         name: "."
         forward-addr: 1.1.1.1@853#cloudflare-dns.com

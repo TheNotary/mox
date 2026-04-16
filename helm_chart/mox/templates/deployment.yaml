@@ -72,18 +72,21 @@ spec:
           args:
             - |
               PIP_NAME="{{ $ipCfg.publicIp.name }}"
-              # Fast path: if the PublicIPAddress already has an IP assigned (upgrade scenario),
-              # skip the 300s kubectl wait entirely.
-              IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}' 2>/dev/null)
-              if [ -n "${IP}" ]; then
-                echo "Fast path: ASO PublicIPAddress ${PIP_NAME} already has IP ${IP}"
-              else
-                echo "Waiting for ASO PublicIPAddress ${PIP_NAME} to be ready..."
-                kubectl wait "publicipaddress/${PIP_NAME}" --for=condition=Ready --timeout=300s
-                IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}')
-              fi
-              echo "Discovered public IP: ${IP}"
-              echo -n "${IP}" > /mox-init/public-ip
+              MAX_ATTEMPTS=60
+              ATTEMPT=0
+              while [ "${ATTEMPT}" -lt "${MAX_ATTEMPTS}" ]; do
+                ATTEMPT=$((ATTEMPT + 1))
+                IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}' 2>/dev/null)
+                if [ -n "${IP}" ]; then
+                  echo "Discovered public IP: ${IP} (attempt ${ATTEMPT})"
+                  echo -n "${IP}" > /mox-init/public-ip
+                  exit 0
+                fi
+                echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS}: ASO PublicIPAddress ${PIP_NAME} has no IP yet, retrying in 10s..."
+                sleep 10
+              done
+              echo "ERROR: Failed to discover public IP for ${PIP_NAME} after ${MAX_ATTEMPTS} attempts" >&2
+              exit 1
           volumeMounts:
             - name: init-etc
               mountPath: /mox-init
