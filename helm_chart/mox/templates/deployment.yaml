@@ -76,8 +76,14 @@ spec:
               ATTEMPT=0
               while [ "${ATTEMPT}" -lt "${MAX_ATTEMPTS}" ]; do
                 ATTEMPT=$((ATTEMPT + 1))
-                IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}' 2>/dev/null)
-                if [ -n "${IP}" ]; then
+                if [ "${ATTEMPT}" -ge "$((MAX_ATTEMPTS - 3))" ]; then
+                  # Let stderr through on final attempts for debugging
+                  IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}')
+                else
+                  IP=$(kubectl get "publicipaddress/${PIP_NAME}" -o jsonpath='{.status.ipAddress}' 2>/dev/null)
+                fi
+                # Validate it looks like an IP (basic dotted-quad check)
+                if echo "${IP}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
                   echo "Discovered public IP: ${IP} (attempt ${ATTEMPT})"
                   echo -n "${IP}" > /mox-init/public-ip
                   exit 0
@@ -101,6 +107,10 @@ spec:
               {{- if and .Values.outboundPublicIpManagement.enabled .Values.outboundPublicIpManagement.provider (not .Values.staticPublicIPs.ipv4) }}
               if [ -f /mox-init/public-ip ]; then
                 ASO_IP=$(cat /mox-init/public-ip)
+                if [ -z "${ASO_IP}" ]; then
+                  echo "ERROR: /mox-init/public-ip exists but is empty — aborting" >&2
+                  exit 1
+                fi
                 echo "Injecting ASO public IP ${ASO_IP} into mox.conf NATIPs"
                 sed -i "s/__ASO_PUBLIC_IP__/${ASO_IP}/" /mox/data/config/mox.conf
               fi
