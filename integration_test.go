@@ -194,6 +194,13 @@ a message.
 		tcheck(t, err, "sendmail")
 	})
 	log.Print("success", slog.Any("duration", time.Since(t0)))
+
+	log.Print("submitting email to directbind instance (non-root, no MOX_SOCKETS)")
+	t0 = time.Now()
+	deliver(false, false, "moxdirectbind.mox1.example:2143", "moxdirectbind@mox1.example", "directbindpass", func() {
+		submit(false, "moxdirectbind@mox1.example", "directbindpass", "moxdirectbind.mox1.example:2587", "moxdirectbind@mox1.example")
+	})
+	log.Print("success", slog.Any("duration", time.Since(t0)))
 }
 
 func expectReadAfter2s(t *testing.T, hostport string, nextproto string, expected string) {

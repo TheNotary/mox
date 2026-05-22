@@ -52,6 +52,13 @@ func RestorePassedFiles() {
 	}
 }
 
+// resetPassedFiles clears the passedListeners and passedFiles maps.
+// Only for use in tests.
+func resetPassedFiles() {
+	passedListeners = map[string]*os.File{}
+	passedFiles = map[string][]*os.File{}
+}
+
 // CleanupPassedFiles closes the listening socket file descriptors and files passed
 // in by the parent process. To be called by the unprivileged child after listeners
 // have been recreated (they dup the file descriptor), and by the privileged

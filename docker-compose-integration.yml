@@ -27,6 +27,8 @@ services:
         condition: service_healthy
       moxacmepebblealpn:
         condition: service_healthy
+      directbind:
+        condition: service_healthy
     networks:
       mailnet1:
         ipv4_address: 172.28.1.50
@@ -199,6 +201,30 @@ services:
     networks:
       mailnet1:
         ipv4_address: 172.28.1.40
+
+  # Mox instance running in direct-bind mode (non-root, no MOX_SOCKETS).
+  # Tests the new code path where mox serve binds sockets directly as unprivileged user.
+  directbind:
+    hostname: moxdirectbind.mox1.example
+    domainname: mox1.example
+    image: mox_integration_moxmail
+    environment:
+      MOX_UID: "${MOX_UID}"
+    command: ["sh", "-c", "/integration/moxdirectbind.sh"]
+    volumes:
+      - ./testdata/integration/resolv.conf:/etc/resolv.conf:z
+      - ./testdata/integration:/integration:z
+    healthcheck:
+      test: netstat -nlt | grep ':2025 '
+      interval: 1s
+      timeout: 1s
+      retries: 10
+    depends_on:
+      dns:
+        condition: service_healthy
+    networks:
+      mailnet1:
+        ipv4_address: 172.28.1.90
 
 networks:
   mailnet1:

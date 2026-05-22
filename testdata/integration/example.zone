@@ -13,6 +13,7 @@ test                    A 172.28.1.50
 localserve.mox1         A 172.28.1.60
 postfixmail.postfix     A 172.28.1.70
 moxacmepebblealpn.mox1  A 172.28.1.80
+moxdirectbind.mox1      A 172.28.1.90
 
 postfix MX 10 postfixmail.postfix.example.
 postfixdkim0._domainkey.postfix TXT "v=DKIM1;h=sha256;t=s;k=ed25519;p=a4IsBTuMsSQjU+xVyx8KEd8eObis4FrCiV72OaEkvDY="
