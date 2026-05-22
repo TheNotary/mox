@@ -404,17 +404,18 @@ func (tc *testconn) close0(waitclose bool) {
 		tc.clientPanic = false // Ignore errors writing to TLS connection the server also closed.
 		tc.client.Close()
 	}
-	err := tc.account.Close()
-	tc.check(err, "close account")
-	if waitclose {
-		tc.account.WaitClosed()
-	}
-	tc.account = nil
+	// First ensure the server goroutine has fully exited (including its
+	// Unregister and account.Close), and stop the switchboard/eraser so all
+	// pending message erasures complete. This guarantees our Close below is the
+	// final reference and CheckConsistency won't race with concurrent writers.
 	tc.serverConn.Close()
 	tc.waitDone()
 	if tc.switchStop != nil {
 		tc.switchStop()
 	}
+	err := tc.account.Close()
+	tc.check(err, "close account")
+	tc.account = nil
 }
 
 func xparseNumSet(s string) imapclient.NumSet {

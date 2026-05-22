@@ -1009,49 +1009,60 @@ var openAccounts = struct {
 }
 
 func closeAccount(acc *Account) (rerr error) {
-	// If we need to remove the account files, we do so without the accounts lock.
-	remove := false
-	defer func() {
-		if remove {
-			log := mlog.New("store", nil)
-			err := removeAccount(log, acc.Name)
-			if rerr == nil {
-				rerr = err
-			}
-			close(acc.closed)
-		}
-	}()
-
 	openAccounts.Lock()
-	defer openAccounts.Unlock()
 	acc.nused--
 	if acc.nused > 0 {
-		return
+		openAccounts.Unlock()
+		return nil
 	}
-	remove = acc.removed
+	remove := acc.removed
+	// Remove from map while holding lock to prevent concurrent OpenAccount from
+	// finding this account while we're closing it.
+	delete(openAccounts.names, acc.Name)
+	openAccounts.Unlock()
 
-	defer func() {
-		err := acc.DB.Close()
-		acc.DB = nil
-		delete(openAccounts.names, acc.Name)
-		if !remove {
+	// We are the last reference. No other goroutines can be operating on this
+	// account, so it's safe to check consistency without racing concurrent writers
+	// (e.g. the message eraser goroutine).
+	if CheckConsistencyOnClose {
+		xerr := acc.CheckConsistency()
+		if xerr != nil {
+			// Still close the DB and signal waiters before panicking.
+			acc.DB.Close()
+			acc.DB = nil
+			if remove {
+				log := mlog.New("store", nil)
+				removeAccount(log, acc.Name)
+			}
 			close(acc.closed)
+			panic(xerr)
 		}
-
-		if rerr == nil {
-			rerr = err
-		}
-	}()
+	}
 
 	// Verify there are no more pending MessageErase records.
 	l, err := bstore.QueryDB[MessageErase](context.TODO(), acc.DB).List()
 	if err != nil {
-		return fmt.Errorf("listing messageerase records: %v", err)
+		rerr = fmt.Errorf("listing messageerase records: %v", err)
 	} else if len(l) > 0 {
-		return fmt.Errorf("messageerase records still present after last account reference is gone: %v", l)
+		rerr = fmt.Errorf("messageerase records still present after last account reference is gone: %v", l)
 	}
 
-	return nil
+	err = acc.DB.Close()
+	acc.DB = nil
+	if rerr == nil {
+		rerr = err
+	}
+
+	if remove {
+		log := mlog.New("store", nil)
+		err := removeAccount(log, acc.Name)
+		if rerr == nil {
+			rerr = err
+		}
+	}
+	close(acc.closed)
+
+	return rerr
 }
 
 // removeAccount moves the account directory for an account away and removes
@@ -1771,16 +1782,10 @@ func (a *Account) WaitClosed() {
 }
 
 // Close reduces the reference count, and closes the database connection when
-// it was the last user.
+// it was the last user. If CheckConsistencyOnClose is set (test mode), the
+// consistency check runs inside closeAccount only when this is the final
+// reference, ensuring no concurrent writers can race with the check.
 func (a *Account) Close() error {
-	if CheckConsistencyOnClose {
-		xerr := a.CheckConsistency()
-		err := closeAccount(a)
-		if xerr != nil {
-			panic(xerr)
-		}
-		return err
-	}
 	return closeAccount(a)
 }
 
