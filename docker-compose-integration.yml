@@ -182,11 +182,17 @@ services:
   # certificate in moxacmepebble and moxmail2.
   acmepebble:
     hostname: acmepebble.example
-    image: docker.io/letsencrypt/pebble:v2.3.1@sha256:fc5a537bf8fbc7cc63aa24ec3142283aa9b6ba54529f86eb8ff31fbde7c5b258
+    build:
+      dockerfile: Dockerfile.pebble
+      context: testdata/integration
     volumes:
       - ./testdata/integration/resolv.conf:/etc/resolv.conf:z
       - ./testdata/integration:/integration:z
-    command: ["sh", "-c", "set -ex; mount; ls -l /etc/resolv.conf; chmod o+r /etc/resolv.conf; pebble -config /integration/pebble-config.json"]
+    environment:
+      PEBBLE_VA_ALWAYS_VALID: "1"
+      PEBBLE_VA_NOSLEEP: "1"
+      PEBBLE_WFE_NONCEREJECT: "0"
+    command: ["sh", "-c", "set -ex; chmod o+r /etc/resolv.conf; pebble -config /integration/pebble-config.json -dnsserver 172.28.1.30:53"]
     ports:
       - 14000:14000  # ACME port
       - 15000:15000  # Management port

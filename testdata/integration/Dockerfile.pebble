@@ -1,0 +1,4 @@
+FROM ghcr.io/letsencrypt/pebble:2.8.0 AS pebble
+FROM alpine:3.17
+RUN apk add --no-cache net-tools
+COPY --from=pebble /app /usr/bin/pebble

@@ -7,14 +7,19 @@ set -e # exit on failed command
 # bind privileged ports. This tests the code path in serve_unix.go where
 # MOX_SOCKETS is NOT set and uid != 0.
 
+apk add --no-cache su-exec
+
 (rm -r /tmp/mox 2>/dev/null || exit 0) # clean slate
 mkdir /tmp/mox
 cd /tmp/mox
 mkdir -p config data
 
 # Write a minimal mox.conf with all ports >1024 for unprivileged binding.
-cat > config/mox.conf <<'MOXCONF'
-DataDir: data
+# User is set to $MOX_UID because in direct-bind mode the User field still gets
+# parsed (even though no privilege drop happens).
+cat > config/mox.conf <<MOXCONF
+DataDir: ../data
+User: $MOX_UID
 LogLevel: trace
 Hostname: moxdirectbind.mox1.example
 Postmaster:
@@ -27,7 +32,7 @@ Listeners:
 		SMTP:
 			Enabled: true
 			Port: 2025
-			NoRequireSTARTTLS: true
+			NoSTARTTLS: true
 		Submission:
 			Enabled: true
 			Port: 2587
@@ -56,19 +61,19 @@ Accounts:
 			moxdirectbind@mox1.example: nil
 DOMAINSCONF
 
-# Ensure correct ownership so our non-root user can access everything.
+# Create the unprivileged user and ensure correct ownership.
+adduser -D -u "$MOX_UID" moxuser 2>/dev/null || true
 chown -R "$MOX_UID:$MOX_UID" /tmp/mox
 
-# Run mox serve as non-root user (without MOX_SOCKETS).
-# The setpriv command drops to the target UID/GID.
-setpriv --reuid="$MOX_UID" --regid="$MOX_UID" --clear-groups mox -checkconsistency serve &
+# Run mox serve as non-root user (without MOX_SOCKETS) using su-exec.
+su-exec "$MOX_UID:$MOX_UID" mox -checkconsistency serve &
 MOX_PID=$!
 
 # Wait for ctl socket to appear (indicates server is ready).
 while true; do
 	if test -e data/ctl; then
 		# Set account password via ctl socket.
-		echo -n directbindpass | setpriv --reuid="$MOX_UID" --regid="$MOX_UID" --clear-groups mox setaccountpassword moxdirectbind
+		echo -n directbindpass | su-exec "$MOX_UID:$MOX_UID" mox setaccountpassword moxdirectbind
 		break
 	fi
 	sleep 0.1
