@@ -293,7 +293,7 @@ to compressed mbox files (about 800MB each) with:
 # already-complete epoch at the time of writing (with a quarter million
 # messages). The archives are large, converting will take some time.
 for i in 0 12; do
-        git clone --mirror http://lore.kernel.org/lkml/$i lkml-$i.git
+        git clone --mirror https://lore.kernel.org/lkml/$i lkml-$i.git
         (cd lkml-$i.git && time ./tombox.sh | gzip >../lkml-$i.mbox.gz)
 done
 ```
