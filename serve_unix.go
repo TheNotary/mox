@@ -170,6 +170,8 @@ Only implemented on unix systems, not Windows.
 
 	log := c.log
 
+	directBind := false
+
 	if os.Getuid() == 0 {
 		mox.MustLoadConfig(true, checkACMEHosts)
 
@@ -210,13 +212,26 @@ Only implemented on unix systems, not Windows.
 			}
 		}
 	} else {
-		mox.RestorePassedFiles()
-		mox.MustLoadConfig(true, checkACMEHosts)
-		log.Print("starting as unprivileged user",
-			slog.String("user", mox.Conf.Static.User),
-			slog.Any("uid", mox.Conf.Static.UID),
-			slog.Any("gid", mox.Conf.Static.GID),
-			slog.Any("pid", os.Getpid()))
+		directBind = true
+		if os.Getenv("MOX_SOCKETS") == "" {
+			// Direct-bind mode: started as unprivileged user without the root→fork flow.
+			// Bind sockets directly like localserve does. Requires all configured ports
+			// to be >1024 (unprivileged).
+			mox.FilesImmediate = true
+			mox.MustLoadConfig(true, checkACMEHosts)
+			log.Print("starting in direct-bind mode as unprivileged user",
+				slog.Any("uid", os.Getuid()),
+				slog.Any("pid", os.Getpid()))
+		} else {
+			directBind = false
+			mox.RestorePassedFiles()
+			mox.MustLoadConfig(true, checkACMEHosts)
+			log.Print("starting as unprivileged user",
+				slog.String("user", mox.Conf.Static.User),
+				slog.Any("uid", mox.Conf.Static.UID),
+				slog.Any("gid", mox.Conf.Static.GID),
+				slog.Any("pid", os.Getpid()))
+		}
 	}
 
 	syscall.Umask(syscall.Umask(007) | 007)
@@ -231,13 +246,15 @@ Only implemented on unix systems, not Windows.
 		if err := os.WriteFile(recvidpath, recvidbuf, 0660); err != nil {
 			log.Fatalx("writing recvidpath", err, slog.String("path", recvidpath))
 		}
-		err := os.Chown(recvidpath, int(mox.Conf.Static.UID), 0)
-		log.Check(err, "chown receveidid.key",
-			slog.String("path", recvidpath),
-			slog.Any("uid", mox.Conf.Static.UID),
-			slog.Any("gid", 0))
-		err = os.Chmod(recvidpath, 0640)
-		log.Check(err, "chmod receveidid.key to 0640", slog.String("path", recvidpath))
+		if !directBind {
+			err := os.Chown(recvidpath, int(mox.Conf.Static.UID), 0)
+			log.Check(err, "chown receveidid.key",
+				slog.String("path", recvidpath),
+				slog.Any("uid", mox.Conf.Static.UID),
+				slog.Any("gid", 0))
+			err = os.Chmod(recvidpath, 0640)
+			log.Check(err, "chmod receveidid.key to 0640", slog.String("path", recvidpath))
+		}
 	}
 	if err := mox.ReceivedIDInit(recvidbuf[:16], recvidbuf[16:]); err != nil {
 		log.Fatalx("init receivedid", err)
@@ -255,7 +272,7 @@ Only implemented on unix systems, not Windows.
 	// unreachable over its ctl socket, and then fail because the network addresses are
 	// taken.
 	const mtastsdbRefresher = true
-	const skipForkExec = false
+	skipForkExec := directBind
 	if err := start(mtastsdbRefresher, !mox.Conf.Static.NoOutgoingDMARCReports, !mox.Conf.Static.NoOutgoingTLSReports, skipForkExec); err != nil {
 		log.Fatalx("start", err)
 	}
