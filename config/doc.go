@@ -280,6 +280,10 @@ See https://pkg.go.dev/github.com/mjl-/sconf for details.
 				# Default 587. (optional)
 				Port: 0
 
+				# Port to advertise to clients in autoconfig/autodiscover responses.
+				# Defaults to Port. (optional)
+				AdvertisedPort: 0
+
 				# Do not require STARTTLS. Since users must login, this means password may be sent
 				# without encryption. Not recommended. (optional)
 				NoRequireSTARTTLS: false
@@ -291,6 +295,10 @@ See https://pkg.go.dev/github.com/mjl-/sconf for details.
 
 				# Default 465. (optional)
 				Port: 0
+
+				# Port to advertise to clients in autoconfig/autodiscover responses.
+				# Defaults to Port. (optional)
+				AdvertisedPort: 0
 
 				# Additionally enable submission on HTTPS port 443 via TLS ALPN. TLS Application
 				# Layer Protocol Negotiation allows clients to request a specific protocol from
@@ -309,6 +317,10 @@ See https://pkg.go.dev/github.com/mjl-/sconf for details.
 				# Default 143. (optional)
 				Port: 0
 
+				# Port to advertise to clients in autoconfig/autodiscover responses.
+				# Defaults to Port. (optional)
+				AdvertisedPort: 0
+
 				# Enable this only when the connection is otherwise encrypted (e.g. through a
 				# VPN). (optional)
 				NoRequireSTARTTLS: false
@@ -320,6 +332,10 @@ See https://pkg.go.dev/github.com/mjl-/sconf for details.
 
 				# Default 993. (optional)
 				Port: 0
+
+				# Port to advertise to clients in autoconfig/autodiscover responses.
+				# Defaults to Port. (optional)
+				AdvertisedPort: 0
 
 				# Additionally enable IMAP on HTTPS port 443 via TLS ALPN. TLS Application Layer
 				# Protocol Negotiation allows clients to request a specific protocol from the
