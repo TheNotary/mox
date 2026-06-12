@@ -50,14 +50,14 @@ func ClientConfigDomain(d dns.Domain) (rconfig ClientConfig, rerr error) {
 		}
 		if !haveIMAP && l.IMAPS.Enabled {
 			rconfig.IMAP.Host = host
-			rconfig.IMAP.Port = config.Port(l.IMAPS.Port, 993)
+			rconfig.IMAP.Port = config.Port(l.IMAPS.AdvertisedPort, config.Port(l.IMAPS.Port, 993))
 			rconfig.IMAP.TLSMode = TLSModeImmediate
 			rconfig.IMAP.EnabledOnHTTPS = l.IMAPS.EnabledOnHTTPS
 			haveIMAP = true
 		}
 		if !haveIMAP && l.IMAP.Enabled {
 			rconfig.IMAP.Host = host
-			rconfig.IMAP.Port = config.Port(l.IMAP.Port, 143)
+			rconfig.IMAP.Port = config.Port(l.IMAP.AdvertisedPort, config.Port(l.IMAP.Port, 143))
 			rconfig.IMAP.TLSMode = TLSModeSTARTTLS
 			if l.TLS == nil {
 				rconfig.IMAP.TLSMode = TLSModeNone
@@ -66,14 +66,14 @@ func ClientConfigDomain(d dns.Domain) (rconfig ClientConfig, rerr error) {
 		}
 		if !haveSubmission && l.Submissions.Enabled {
 			rconfig.Submission.Host = host
-			rconfig.Submission.Port = config.Port(l.Submissions.Port, 465)
+			rconfig.Submission.Port = config.Port(l.Submissions.AdvertisedPort, config.Port(l.Submissions.Port, 465))
 			rconfig.Submission.TLSMode = TLSModeImmediate
 			rconfig.Submission.EnabledOnHTTPS = l.Submissions.EnabledOnHTTPS
 			haveSubmission = true
 		}
 		if !haveSubmission && l.Submission.Enabled {
 			rconfig.Submission.Host = host
-			rconfig.Submission.Port = config.Port(l.Submission.Port, 587)
+			rconfig.Submission.Port = config.Port(l.Submission.AdvertisedPort, config.Port(l.Submission.Port, 587))
 			rconfig.Submission.TLSMode = TLSModeSTARTTLS
 			if l.TLS == nil {
 				rconfig.Submission.TLSMode = TLSModeNone
@@ -154,20 +154,36 @@ func ClientConfigsDomain(d dns.Domain) (ClientConfigs, error) {
 			if l.Submissions.EnabledOnHTTPS {
 				note += "; also served on port 443 with TLS ALPN \"smtp\""
 			}
-			c.Entries = append(c.Entries, ClientConfigsEntry{"Submission (SMTP)", host, config.Port(l.Submissions.Port, 465), name, note})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"Submission (SMTP)", host,
+				config.Port(l.Submissions.AdvertisedPort, config.Port(l.Submissions.Port, 465)),
+				name, note,
+			})
 		}
 		if l.IMAPS.Enabled {
 			note := "with TLS"
 			if l.IMAPS.EnabledOnHTTPS {
 				note += "; also served on port 443 with TLS ALPN \"imap\""
 			}
-			c.Entries = append(c.Entries, ClientConfigsEntry{"IMAP", host, config.Port(l.IMAPS.Port, 993), name, note})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"IMAPS", host,
+				config.Port(l.IMAPS.AdvertisedPort, config.Port(l.IMAPS.Port, 993)),
+				name, note,
+			})
 		}
 		if l.Submission.Enabled {
-			c.Entries = append(c.Entries, ClientConfigsEntry{"Submission (SMTP)", host, config.Port(l.Submission.Port, 587), name, note(l.TLS != nil, !l.Submission.NoRequireSTARTTLS)})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"Submission (SMTP)", host,
+				config.Port(l.Submission.AdvertisedPort, config.Port(l.Submission.Port, 587)),
+				name, note(l.TLS != nil, !l.Submission.NoRequireSTARTTLS),
+			})
 		}
 		if l.IMAP.Enabled {
-			c.Entries = append(c.Entries, ClientConfigsEntry{"IMAP", host, config.Port(l.IMAPS.Port, 143), name, note(l.TLS != nil, !l.IMAP.NoRequireSTARTTLS)})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"IMAP", host,
+				config.Port(l.IMAP.AdvertisedPort, config.Port(l.IMAP.Port, 143)),
+				name, note(l.TLS != nil, !l.IMAP.NoRequireSTARTTLS),
+			})
 		}
 	}
 
