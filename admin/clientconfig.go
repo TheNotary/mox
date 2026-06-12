@@ -154,20 +154,36 @@ func ClientConfigsDomain(d dns.Domain) (ClientConfigs, error) {
 			if l.Submissions.EnabledOnHTTPS {
 				note += "; also served on port 443 with TLS ALPN \"smtp\""
 			}
-			c.Entries = append(c.Entries, ClientConfigsEntry{"Submission (SMTP)", host, config.Port(l.Submissions.AdvertisedPort, config.Port(l.Submissions.Port, 465)), name, note})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"Submission (SMTP)", host,
+				config.Port(l.Submissions.AdvertisedPort, config.Port(l.Submissions.Port, 465)),
+				name, note,
+			})
 		}
 		if l.IMAPS.Enabled {
 			note := "with TLS"
 			if l.IMAPS.EnabledOnHTTPS {
 				note += "; also served on port 443 with TLS ALPN \"imap\""
 			}
-			c.Entries = append(c.Entries, ClientConfigsEntry{"IMAP", host, config.Port(l.IMAPS.AdvertisedPort, config.Port(l.IMAPS.Port, 993)), name, note})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"IMAPS", host,
+				config.Port(l.IMAPS.AdvertisedPort, config.Port(l.IMAPS.Port, 993)),
+				name, note,
+			})
 		}
 		if l.Submission.Enabled {
-			c.Entries = append(c.Entries, ClientConfigsEntry{"Submission (SMTP)", host, config.Port(l.Submission.AdvertisedPort, config.Port(l.Submission.Port, 587)), name, note(l.TLS != nil, !l.Submission.NoRequireSTARTTLS)})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"Submission (SMTP)", host,
+				config.Port(l.Submission.AdvertisedPort, config.Port(l.Submission.Port, 587)),
+				name, note(l.TLS != nil, !l.Submission.NoRequireSTARTTLS),
+			})
 		}
 		if l.IMAP.Enabled {
-			c.Entries = append(c.Entries, ClientConfigsEntry{"IMAP", host, config.Port(l.IMAP.AdvertisedPort, config.Port(l.IMAPS.Port, 143)), name, note(l.TLS != nil, !l.IMAP.NoRequireSTARTTLS)})
+			c.Entries = append(c.Entries, ClientConfigsEntry{
+				"IMAP", host,
+				config.Port(l.IMAP.AdvertisedPort, config.Port(l.IMAP.Port, 143)),
+				name, note(l.TLS != nil, !l.IMAP.NoRequireSTARTTLS),
+			})
 		}
 	}
 
