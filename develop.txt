@@ -88,6 +88,12 @@ practical for users, and desirable given Go's reproducible builds. When
 developing, run "make" to also build the frontend code. Run "make
 install-frontend" once to install the TypeScript compiler into ./node_modules/.
 
+The generated documentation can be refreshed with "make generate-docs". This
+generates the package documentation and Sherpa API definitions, as well as
+webapi/openapi.json for the HTTP/JSON webapi. The WebAPI uses a JSON request
+encoded in a form field named "request"; it does not accept a JSON request body
+directly.
+
 There are no other external (runtime or devtime) frontend dependencies. A
 light-weight abstraction over the DOM is provided by ./lib.ts. A bit more
 manual UI state management must be done compared to "frameworks", but it is

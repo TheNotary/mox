@@ -33,7 +33,8 @@ jobs:
       # Trigger frontend rebuild to verify generated files match.
       - run: touch */*.ts
 
-      - run: make build
+      - name: Generate documentation and build
+        run: make build
 
       - name: Ensure generated files are committed
         run: git diff --exit-code

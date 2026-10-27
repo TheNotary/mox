@@ -1,13 +1,18 @@
 default: build
 
+.PHONY: generate-docs
+generate-docs:
+	CGO_ENABLED=0 ./gendoc.sh
+	CGO_ENABLED=0 ./genapidoc.sh
+	CGO_ENABLED=0 go run ./cmd/genwebapiopenapi
+
 build: build0 frontend build1
 
 build0:
 	# build early to catch syntax errors
 	CGO_ENABLED=0 go build
 	CGO_ENABLED=0 go vet ./...
-	./gendoc.sh
-	CGO_ENABLED=0 ./genapidoc.sh
+	$(MAKE) generate-docs
 	CGO_ENABLED=0 ./gents.sh webadmin/api.json webadmin/api.ts
 	CGO_ENABLED=0 ./gents.sh webaccount/api.json webaccount/api.ts
 	CGO_ENABLED=0 ./gents.sh webmail/api.json webmail/api.ts

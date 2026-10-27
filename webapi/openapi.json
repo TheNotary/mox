@@ -1,0 +1,1342 @@
+{
+	"components": {
+		"schemas": {
+			"Error": {
+				"description": "Error returned with HTTP status 400.",
+				"properties": {
+					"Code": {
+						"type": "string"
+					},
+					"Message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"Code",
+					"Message"
+				],
+				"type": "object"
+			},
+			"File": {
+				"properties": {
+					"ContentID": {
+						"type": "string"
+					},
+					"ContentType": {
+						"type": "string"
+					},
+					"Data": {
+						"type": "string"
+					},
+					"Name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"Message": {
+				"properties": {
+					"BCC": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"CC": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"Date": {
+						"anyOf": [
+							{
+								"format": "date-time",
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"From": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"HTML": {
+						"type": "string"
+					},
+					"MessageID": {
+						"type": "string"
+					},
+					"References": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"ReplyTo": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"Subject": {
+						"type": "string"
+					},
+					"Text": {
+						"type": "string"
+					},
+					"To": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"MessageDeleteRequest": {
+				"properties": {
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageDeleteResult": {
+				"properties": {},
+				"type": "object"
+			},
+			"MessageFlagsAddRequest": {
+				"properties": {
+					"Flags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageFlagsAddResult": {
+				"properties": {},
+				"type": "object"
+			},
+			"MessageFlagsRemoveRequest": {
+				"properties": {
+					"Flags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageFlagsRemoveResult": {
+				"properties": {},
+				"type": "object"
+			},
+			"MessageGetRequest": {
+				"properties": {
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageGetResult": {
+				"properties": {
+					"Message": {
+						"$ref": "#/components/schemas/Message"
+					},
+					"Meta": {
+						"$ref": "#/components/schemas/MessageMeta"
+					},
+					"Structure": {
+						"$ref": "#/components/schemas/Structure"
+					}
+				},
+				"type": "object"
+			},
+			"MessageMeta": {
+				"properties": {
+					"DKIMVerifiedDomains": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"DSN": {
+						"type": "boolean"
+					},
+					"Flags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"MailFrom": {
+						"type": "string"
+					},
+					"MailFromValidated": {
+						"type": "boolean"
+					},
+					"MailboxName": {
+						"type": "string"
+					},
+					"MsgFrom": {
+						"type": "string"
+					},
+					"MsgFromValidated": {
+						"type": "boolean"
+					},
+					"RcptTo": {
+						"type": "string"
+					},
+					"RemoteIP": {
+						"type": "string"
+					},
+					"Size": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageMoveRequest": {
+				"properties": {
+					"DestMailboxName": {
+						"type": "string"
+					},
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"MessageMoveResult": {
+				"properties": {},
+				"type": "object"
+			},
+			"MessagePartGetRequest": {
+				"properties": {
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"PartPath": {
+						"items": {
+							"format": "int64",
+							"type": "integer"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"MessageRawGetRequest": {
+				"properties": {
+					"MsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"NameAddress": {
+				"properties": {
+					"Address": {
+						"type": "string"
+					},
+					"Name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"SendRequest": {
+				"properties": {
+					"AlternativeFiles": {
+						"items": {
+							"$ref": "#/components/schemas/File"
+						},
+						"type": "array"
+					},
+					"AttachedFiles": {
+						"items": {
+							"$ref": "#/components/schemas/File"
+						},
+						"type": "array"
+					},
+					"BCC": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"CC": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"Date": {
+						"anyOf": [
+							{
+								"format": "date-time",
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"Extra": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"From": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"FutureRelease": {
+						"anyOf": [
+							{
+								"format": "date-time",
+								"type": "string"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"HTML": {
+						"type": "string"
+					},
+					"Headers": {
+						"items": {
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						"type": "array"
+					},
+					"InlineFiles": {
+						"items": {
+							"$ref": "#/components/schemas/File"
+						},
+						"type": "array"
+					},
+					"MessageID": {
+						"type": "string"
+					},
+					"References": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"ReplyTo": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					},
+					"RequireTLS": {
+						"anyOf": [
+							{
+								"type": "boolean"
+							},
+							{
+								"type": "null"
+							}
+						]
+					},
+					"SaveSent": {
+						"type": "boolean"
+					},
+					"Subject": {
+						"type": "string"
+					},
+					"Text": {
+						"type": "string"
+					},
+					"To": {
+						"items": {
+							"$ref": "#/components/schemas/NameAddress"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"SendResult": {
+				"properties": {
+					"MessageID": {
+						"type": "string"
+					},
+					"Submissions": {
+						"items": {
+							"$ref": "#/components/schemas/Submission"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"Structure": {
+				"properties": {
+					"ContentDisposition": {
+						"type": "string"
+					},
+					"ContentID": {
+						"type": "string"
+					},
+					"ContentType": {
+						"type": "string"
+					},
+					"ContentTypeParams": {
+						"additionalProperties": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"DecodedSize": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"Filename": {
+						"type": "string"
+					},
+					"Parts": {
+						"items": {
+							"$ref": "#/components/schemas/Structure"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"Submission": {
+				"properties": {
+					"Address": {
+						"type": "string"
+					},
+					"FromID": {
+						"type": "string"
+					},
+					"QueueMsgID": {
+						"format": "int64",
+						"type": "integer"
+					}
+				},
+				"type": "object"
+			},
+			"Suppression": {
+				"properties": {
+					"Account": {
+						"type": "string"
+					},
+					"BaseAddress": {
+						"type": "string"
+					},
+					"Created": {
+						"format": "date-time",
+						"type": "string"
+					},
+					"ID": {
+						"format": "int64",
+						"type": "integer"
+					},
+					"Manual": {
+						"type": "boolean"
+					},
+					"OriginalAddress": {
+						"type": "string"
+					},
+					"Reason": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionAddRequest": {
+				"properties": {
+					"EmailAddress": {
+						"type": "string"
+					},
+					"Manual": {
+						"type": "boolean"
+					},
+					"Reason": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionAddResult": {
+				"properties": {},
+				"type": "object"
+			},
+			"SuppressionListRequest": {
+				"properties": {},
+				"type": "object"
+			},
+			"SuppressionListResult": {
+				"properties": {
+					"Suppressions": {
+						"items": {
+							"$ref": "#/components/schemas/Suppression"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionPresentRequest": {
+				"properties": {
+					"EmailAddress": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionPresentResult": {
+				"properties": {
+					"Present": {
+						"type": "boolean"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionRemoveRequest": {
+				"properties": {
+					"EmailAddress": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"SuppressionRemoveResult": {
+				"properties": {},
+				"type": "object"
+			}
+		},
+		"securitySchemes": {
+			"basicAuth": {
+				"description": "Use the account email address as the username.",
+				"scheme": "basic",
+				"type": "http"
+			}
+		}
+	},
+	"info": {
+		"description": "HTTP Basic authenticated API for sending and managing messages. The configured WebAPI path may differ from the default /webapi/v0/.",
+		"title": "Mox WebAPI",
+		"version": "0"
+	},
+	"openapi": "3.1.0",
+	"paths": {
+		"/webapi/v0/MessageDelete": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageDelete.",
+				"operationId": "MessageDelete",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageDeleteRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageDeleteResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessageFlagsAdd": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageFlagsAdd.",
+				"operationId": "MessageFlagsAdd",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageFlagsAddRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageFlagsAddResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessageFlagsRemove": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageFlagsRemove.",
+				"operationId": "MessageFlagsRemove",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageFlagsRemoveRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageFlagsRemoveResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessageGet": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageGet.",
+				"operationId": "MessageGet",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageGetRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageGetResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessageMove": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageMove.",
+				"operationId": "MessageMove",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageMoveRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageMoveResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessagePartGet": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessagePartGet.",
+				"operationId": "MessagePartGet",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessagePartGetRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/octet-stream": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							}
+						},
+						"description": "Successful response containing message data"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/MessageRawGet": {
+			"post": {
+				"description": "Call the Mox WebAPI method MessageRawGet.",
+				"operationId": "MessageRawGet",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/MessageRawGetRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/octet-stream": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							}
+						},
+						"description": "Successful response containing message data"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/Send": {
+			"post": {
+				"description": "Call the Mox WebAPI method Send.",
+				"operationId": "Send",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SendRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`. Multipart requests may also include repeated `alternativefile`, `inlinefile`, and `attachedfile` file parts.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						},
+						"multipart/form-data": {
+							"schema": {
+								"properties": {
+									"alternativefile": {
+										"format": "binary",
+										"type": "string"
+									},
+									"attachedfile": {
+										"format": "binary",
+										"type": "string"
+									},
+									"inlinefile": {
+										"format": "binary",
+										"type": "string"
+									},
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SendRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`. Multipart requests may also include repeated `alternativefile`, `inlinefile`, and `attachedfile` file parts.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SendResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/SuppressionAdd": {
+			"post": {
+				"description": "Call the Mox WebAPI method SuppressionAdd.",
+				"operationId": "SuppressionAdd",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SuppressionAddRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SuppressionAddResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/SuppressionList": {
+			"post": {
+				"description": "Call the Mox WebAPI method SuppressionList.",
+				"operationId": "SuppressionList",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SuppressionListRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SuppressionListResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/SuppressionPresent": {
+			"post": {
+				"description": "Call the Mox WebAPI method SuppressionPresent.",
+				"operationId": "SuppressionPresent",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SuppressionPresentRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SuppressionPresentResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		},
+		"/webapi/v0/SuppressionRemove": {
+			"post": {
+				"description": "Call the Mox WebAPI method SuppressionRemove.",
+				"operationId": "SuppressionRemove",
+				"requestBody": {
+					"content": {
+						"application/x-www-form-urlencoded": {
+							"schema": {
+								"properties": {
+									"request": {
+										"contentMediaType": "application/json",
+										"contentSchema": {
+											"$ref": "#/components/schemas/SuppressionRemoveRequest"
+										},
+										"description": "JSON request object encoded as the form field `request`.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"request"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SuppressionRemoveResult"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						},
+						"description": "The request was invalid or could not be processed"
+					},
+					"401": {
+						"description": "Authentication failed"
+					},
+					"429": {
+						"description": "Too many authentication attempts"
+					}
+				},
+				"security": [
+					{
+						"basicAuth": []
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/webapi/v0"
+		}
+	]
+}
